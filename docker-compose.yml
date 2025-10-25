@@ -3,63 +3,64 @@ version: '3.8'
 services:
   web:
     build: .
+    container_name: nodejs-app
+    restart: unless-stopped
+    expose:
+      - "3000"
+    env_file:
+      - .env
     environment:
-      - MONGO_URI=${MONGO_URI}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
+      - NODE_ENV=production
     depends_on:
-      mongo:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"] 
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
-
+      - mongo
+      - redis
     networks:
-      - frontend # can receive traffic from outside
-      - backend # can communicate with database
-      
-    command: pnpm dev
-    
-  redis:
-    image: "redis:latest"
-    volumes:
-      - redis-data:/data
-    
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-    networks:
-      - backend   # Only internal access
+      - app-network
 
   mongo:
-    image: "mongo:latest"
+    image: mongo:7
+    container_name: mongodb
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_DATABASE=production-db
     volumes:
       - mongo-data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", --eval, "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    networks:
+      - app-network
 
-    networks: 
-      - backend   # Only internal access
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - certbot-webroot:/var/www/certbot:ro
+      - certbot-certs:/etc/letsencrypt:ro
+    depends_on:
+      - web
+    networks:
+      - app-network
 
 volumes:
-  redis-data:
   mongo-data:
+  redis-data:
+  certbot-webroot:
+  certbot-certs:
 
 networks:
-  frontend:
+  app-network:
     driver: bridge
-  backend:
-    driver: bridge
-
