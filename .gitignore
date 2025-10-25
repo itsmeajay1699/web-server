@@ -1,0 +1,87 @@
+
+# Node / Express .gitignore
+
+# dependency directories
+/node_modules
+/.pnp
+.pnp.js
+.pnp.cjs
+
+00*
+01*
+02*
+03*
+04*
+
+# debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# runtime data
+pids
+*.pid
+*.pid.lock
+*.seed
+
+# local env files (contain secrets)
+.env
+.env.*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# build / output
+/dist
+/build
+/out
+/public/build
+/.next
+/.nuxt
+/.parcel-cache
+/.cache
+
+# uploaded files / runtime storage
+/uploads
+/public/uploads
+/tmp
+/temp
+*.tmp
+
+# test / coverage
+/coverage
+/.nyc_output
+/test-results
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-workspace
+*.code-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# logs
+logs
+*.log
+logs/*
+!logs/.gitkeep
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# Node REPL history
+.node_repl_history
+
+# Docker local override / envs (optional)
+docker-compose.override.yml
+.env.*.docker
+
+# other secrets / local config
+secrets.yml
+.envrc

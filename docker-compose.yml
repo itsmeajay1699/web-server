@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"] 
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+    networks:
+      - frontend # can receive traffic from outside
+      - backend # can communicate with database
+      
+    command: pnpm dev
+    
+  redis:
+    image: "redis:latest"
+    volumes:
+      - redis-data:/data
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+    networks:
+      - backend   # Only internal access
+
+  mongo:
+    image: "mongo:latest"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", --eval, "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks: 
+      - backend   # Only internal access
+
+volumes:
+  redis-data:
+  mongo-data:
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+
